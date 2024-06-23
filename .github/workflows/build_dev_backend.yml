@@ -1,0 +1,61 @@
+name: build_loop_bridge-backend
+
+on:
+  workflow_dispatch: 
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    env:
+      name: ${GITHUB_REPOSITORY#*/}"-dev"
+      key: "ssh-key-loop"
+      stamp: ${GITHUB_SHA}
+      host: ${{ secrets.BR_BE_DEV_HOST }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up environment variables
+        env:
+          NODE_ENV: ${{ vars.NODE_ENV }}
+          PORT: ${{ vars.PORT }}
+          CORS_WHITELIST: 
+          BINANCE_PRIVATE_KEY: ${{ secrets.BINANCE_PRIVATE_KEY }}
+          LOOP_PRIVATE_KEY: ${{ secrets.LOOP_PRIVATE_KEY }}
+          BINANCE_RPC: ${{ secrets.BINANCE_RPC }}
+          LOOP_RPC: ${{ secrets.LOOP_RPC }}
+          MONGO_URL: ${{ secrets.MONGO_URL }}
+        run: |
+          echo "NODE_ENV=$NODE_ENV" >> .env
+          echo "PORT=$PORT" >> .env
+          echo "CORS_WHITELIST=$CORS_WHITELIST" >> .env
+          echo "BINANCE_PRIVATE_KEY=$BINANCE_PRIVATE_KEY" >> .env
+          echo "LOOP_PRIVATE_KEY=$LOOP_PRIVATE_KEY" >> .env
+          echo "BINANCE_RPC=$BINANCE_RPC" >> .env
+          echo "LOOP_RPC=$LOOP_RPC" >> .env
+          echo "MONGO_URL=$MONGO_URL" >> .env
+
+      - name: Build docker
+        run: |    
+          docker build . -t ${{ env.name }}-${{ env.stamp }}
+
+      - name: Save image
+        run: |           
+          docker save -o ${{ env.name }}-${{ env.stamp }}.tar ${{ env.name }}-${{ env.stamp }}
+
+      - name: Save secret key
+        run: |
+          echo "${{ secrets.BR_BE_DEV_SSH }}" > ${key}
+          sudo chmod 600 ${key}
+
+      - name: Copy image
+        run: |
+          scp -i ${key} -o "StrictHostKeyChecking no" ${{ env.name }}-${{ env.stamp }}.tar ${{ env.host }}:${{ env.name }}-${{ env.stamp }}.tar
+      
+      - name: Start image
+        run: |
+          ssh -i ${key} -o "StrictHostKeyChecking no" ${{ env.host }} 'sudo docker load -i '${{ env.name }}'-'${{ env.stamp }}'.tar; \
+          sudo docker stop '${{ env.name }}' || true; \
+          sudo docker run -d --restart always -p 3030:3030 --name '${{ env.name }}'-new '${{ env.name }}'-'${{ env.stamp }}'; \
+          sudo docker rm '${{ env.name }}' || true; sudo docker rmi $(sudo docker images -q) || true; \
+          sudo docker rename '${{ env.name }}'-new '${{ env.name }}'; rm '${{ env.name }}'-'${{ env.stamp }}'.tar'

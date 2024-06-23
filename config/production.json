@@ -1,0 +1,16 @@
+{
+  "chains": {
+    "binance": {
+      "rpc": "https://bsc-dataseed.binance.org/",
+      "bridgeContractAddress": "0xa2B4D9B122bE246A6a0a1f996EFe11fC53a8F60D",
+      "bridgeContractCreationBlock": 29753310,
+      "name": "binance"
+    },
+    "loop": {
+      "rpc": "https://api.mainnetloop.com/",
+      "bridgeContractAddress": "0xc91e7bCF649ba2c33d50ff11a9c0f137A49D7436",
+      "bridgeContractCreationBlock": 11294434,
+      "name": "loop"
+    }
+  }
+}

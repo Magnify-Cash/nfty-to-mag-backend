@@ -1,0 +1,16 @@
+{
+  "chains": {
+    "binance": {
+      "rpc": "https://rpc-amoy.polygon.technology",
+      "bridgeContractAddress": "0x79Bf19fE034Df200bE853261492eF7D7faA443C4",
+      "bridgeContractCreationBlock": 8477216,
+      "name": "binance"
+    },
+    "loop": {
+      "rpc": "https://sepolia.base.org",
+      "bridgeContractAddress": "0x8b8291e7fF90f5876738381A818A5222f31AECe8",
+      "bridgeContractCreationBlock": 11522977,
+      "name": "loop"
+    }
+  }
+}
