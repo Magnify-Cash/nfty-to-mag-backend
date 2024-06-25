@@ -1,12 +1,12 @@
-FROM node:16.14.0-alpine
-WORKDIR /usr/src/app
-COPY . .
-RUN npm install -g typescript
+FROM node:16.14.0-alpine AS build
+WORKDIR /app
 COPY package*.json ./
-
 RUN npm ci
+COPY ./ ./
 
-EXPOSE 3030
+FROM node:16.14.0-alpine AS RUN
+
+EXPOSE 3000
 # CMD ["node", "./dist/src/index.js"]
 CMD npm start
 
