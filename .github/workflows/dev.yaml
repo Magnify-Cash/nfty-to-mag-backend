@@ -1,0 +1,48 @@
+name: Dev deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev
+    paths-ignore:
+      - ".github/workflows/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    env:
+      name: ${GITHUB_REPOSITORY#*/}
+      ssh-key: ${{ secrets.DEV_SSH_KEY }}
+      tag: latest #or ${{ github.sha }}
+      host: ${{ secrets.DEV_NAME }}@${{ secrets.DEV_IP }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build docker image
+        run: |
+          docker build . -t ${{ env.name }}:${{ env.tag }}
+
+      - name: Save docker image
+        run: |
+          docker save -o ${{ env.name }}.tar ${{ env.name }}:${{ env.tag }}
+
+      - name: Generate .env
+        run: |
+          echo "${{ secrets.DEV_ENVS }}" >> .env
+        
+      - name: Copy image to EC2
+        run: |
+          echo "${{ env.ssh-key }}" > ssh-key.pem
+          sudo chmod 400 ssh-key.pem
+          scp -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.name }}.tar ${{ env.host }}:${{ env.name }}.tar
+          scp -i ssh-key.pem -o StrictHostKeyChecking=no .env ${{ env.host }}:backend/.env
+
+      - name: Start image
+        run: |
+          ssh -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.host }} ' \
+          sudo docker load -i '${{ env.name }}'.tar && \
+          sudo docker compose -f backend/docker-compose.yaml up -d && \
+          sudo docker image prune -af'
