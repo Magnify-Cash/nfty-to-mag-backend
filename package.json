@@ -7,7 +7,7 @@
     "prebuild": "rimraf dist",
     "build": "tsc -p .",
     "test": "NODE_ENV=test nyc ./node_modules/.bin/_mocha 'test/**/*.test.ts'",
-    "start": "npm run build && node ./dist/src/index.js",
+    "start": "node ./dist/src/index.js",
     "start:dev": "npm run build -- -w",
     "lint": "eslint \"{src,apps,libs,test,api}/**/*.{ts,json}\"",
     "lint:fix": "npm run lint -- --fix",

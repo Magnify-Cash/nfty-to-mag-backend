@@ -3,7 +3,7 @@ services:
     restart: always
     build: .
     volumes:
-      - ./:/usr/src/app
+      - ./:/app
 
   mongo:
     image: mongo:8.0.0-rc7

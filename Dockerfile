@@ -1,12 +1,17 @@
-FROM node:16.14.0-alpine AS build
+FROM node:20.12.2-alpine3.19 AS build
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --omit=dev
 COPY ./ ./
+RUN npm run build
 
-FROM node:16.14.0-alpine AS RUN
+FROM node:20.12.2-alpine3.19 AS run
+WORKDIR /app
 
+COPY --from=build --chown=node:node /app/node_modules ./node_modules
+COPY --from=build --chown=node:node /app/dist ./dist
+COPY --from=build --chown=node:node /app/config ./config
+
+USER node
 EXPOSE 3000
-# CMD ["node", "./dist/src/index.js"]
-CMD npm start
-
+CMD ["node", "dist/src/index.js"]

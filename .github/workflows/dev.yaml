@@ -31,7 +31,7 @@ jobs:
 
       - name: Generate .env
         run: |
-          echo "DEV_ENVS" >> .env
+          echo "${{ secrets.DEV_ENVS }}" >> .env
         
       - name: Copy image to EC2
         run: |
@@ -46,4 +46,3 @@ jobs:
           sudo docker load -i '${{ env.name }}'.tar && \
           sudo docker compose -f backend/docker-compose.yaml up -d && \
           sudo docker image prune -af'
-
