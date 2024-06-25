@@ -9,6 +9,7 @@ export interface IAddOrder {
   amount: string;
   sendTxHash: string;
   createdOnBlock: number;
+  status?: string;
 }
 
 export type IProgress = Record<"source" | "destination", number>;

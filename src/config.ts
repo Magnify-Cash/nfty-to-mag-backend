@@ -18,20 +18,18 @@ export type ChainConfig = {
 export type ChainsConfig = Record<"source" | "destination", ChainConfig>;
 
 export type CronConfig = Record<
-  "updateCoins" | "searchEvents" | "processQueue",
+  "updateCoins" | "searchEvents" | "processQueue" | "refundStuckOrders",
   string
 >;
 
 export type TtlConfig = Record<"ordersLifeSec", number>;
 
-export type EventsConfig = {
-  send: string;
-  //withdraw: string;
-  refund: string;
-  addToken: string;
-  // removeToken: string;
-  // newWrappedNative: string;
-};
+export type SourceEventsConfig = Record<
+  "send" | "refund" | "addToken" | "removeToken",
+  string
+>;
+
+export type DestinationEventsConfig = Record<"withdraw", string>;
 
 export type ProgressConfig = {
   block: string;
@@ -39,13 +37,6 @@ export type ProgressConfig = {
 
 export type ApiConfig = {
   coingecko: string;
-};
-
-export type TokensConfig = {
-  defaultIcon: {
-    loop: string;
-    binance: string;
-  };
 };
 
 export type MongoConfig = {
@@ -65,10 +56,10 @@ export type Config = {
   chains: ChainsConfig;
   cron: CronConfig;
   ttl: TtlConfig;
-  events: EventsConfig;
+  sourceEvents: SourceEventsConfig;
+  destinationEvents: DestinationEventsConfig;
   progress: ProgressConfig;
   api: ApiConfig;
-  tokens: TokensConfig;
   mongo: MongoConfig;
 };
 
@@ -123,10 +114,11 @@ class ConfigurationClass {
       ),
       cron: nodeConfig.get<CronConfig>("cron"),
       ttl: nodeConfig.get<TtlConfig>("ttl"),
-      events: nodeConfig.get<EventsConfig>("events"),
+      sourceEvents: nodeConfig.get<SourceEventsConfig>("sourceEvents"),
+      destinationEvents:
+        nodeConfig.get<DestinationEventsConfig>("destinationEvents"),
       progress: nodeConfig.get<ProgressConfig>("progress"),
       api: nodeConfig.get<ApiConfig>("api"),
-      tokens: nodeConfig.get<TokensConfig>("tokens"),
       mongo: {
         url: process.env.MONGO_URL || "",
       },

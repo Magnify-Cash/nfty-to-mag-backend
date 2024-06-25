@@ -6,7 +6,7 @@ export default (app: Router) => {
   const whitelist = config.get<string[]>("corsWhitelist");
   if (!whitelist || !whitelist.length) return app.use(cors());
   const options = {
-    origin: whitelist
+    origin: whitelist,
   };
   app.use(cors(options));
-}
+};

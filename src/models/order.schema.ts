@@ -27,6 +27,8 @@ export interface IOrder {
   amount: string;
   status: string;
   sendTxHash: string;
+  blockTxHash?: string;
+  refundTxHash?: string;
   withdrawTxHash?: string;
   createdOnBlock: number;
   updatedOnBlock?: number;
@@ -50,6 +52,8 @@ const orderSchema = new Schema<IOrder>({
   tokenOtherChain: { type: String, required: true },
   amount: { type: String, required: true },
   status: { type: String, required: true, index: true },
+  blockTxHash: { type: String, required: false },
+  refundTxHash: { type: String, required: false },
   sendTxHash: { type: String, required: true },
   withdrawTxHash: { type: String, required: false },
   createdOnBlock: { type: Number, required: true },

@@ -28,11 +28,6 @@
   },
   {
     "inputs": [],
-    "name": "FailedToSendEther",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "InsufficientAmountToSend",
     "type": "error"
   },
@@ -66,11 +61,6 @@
       }
     ],
     "name": "MinTimeToWaitBeforeRefundIsTooBig",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "MsgValueShouldBeZero",
     "type": "error"
   },
   {
@@ -301,25 +291,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "oldWrappedNative",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "newWrappedNative",
-        "type": "address"
-      }
-    ],
-    "name": "NewWrappedNative",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": false,
         "internalType": "address",
         "name": "account",
@@ -518,43 +489,6 @@
     "type": "event"
   },
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "tokenOnSecondChain",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "nonce",
-        "type": "uint256"
-      }
-    ],
-    "name": "Withdraw",
-    "type": "event"
-  },
-  {
     "inputs": [],
     "name": "DEFAULT_ADMIN_ROLE",
     "outputs": [
@@ -701,7 +635,7 @@
         "type": "address"
       },
       {
-        "internalType": "address",
+        "internalType": "address payable",
         "name": "to",
         "type": "address"
       },
@@ -796,21 +730,6 @@
         "internalType": "uint24",
         "name": "_secondChainId",
         "type": "uint24"
-      },
-      {
-        "internalType": "address",
-        "name": "_wrappedNative",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_minAmountForNative",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "_otherChainTokenForNative",
-        "type": "address"
       },
       {
         "internalType": "address",
@@ -977,25 +896,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "nonceIsUsed",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "",
         "type": "address"
@@ -1140,7 +1040,7 @@
     ],
     "name": "send",
     "outputs": [],
-    "stateMutability": "payable",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1175,19 +1075,6 @@
       }
     ],
     "name": "setMinAmountForToken",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_wrappedNative",
-        "type": "address"
-      }
-    ],
-    "name": "setNewWrappedNative",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1315,47 +1202,6 @@
     "name": "upgradeToAndCall",
     "outputs": [],
     "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "nonceOnOtherChain",
-        "type": "uint256"
-      }
-    ],
-    "name": "withdraw",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "wrappedNative",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {

@@ -11,8 +11,8 @@ const parseArgs = (args: Record<string, any>): string => {
       try {
         if (typeof val === "object") {
           arg = JSON.stringify(val)
-            .replace(/\\\"/g, "~~~") // template replacement of quote
-            .replace(/\"/g, "'")
+            .replace(/\\"/g, "~~~") // template replacement of quote
+            .replace(/"/g, "'")
             .replace(/~~~/g, '"'); // back to quote
         }
       } catch (e) {

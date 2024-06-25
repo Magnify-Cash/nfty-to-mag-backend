@@ -1,7 +1,7 @@
 import express, { Express } from "express";
 import { applicationService } from "./app";
 import { Config, config } from "./config";
-import { getNewInstanceOfLogger, instantiateLogger, logger } from "./logger";
+import { instantiateLogger, logger } from "./logger";
 import cors from "../api/cors";
 import executionRouter from "../api/routes/router";
 import { mongoConnect } from "./mongo";
@@ -23,6 +23,5 @@ app.listen(port, async () => {
     logger().info(`⚡App server is running at ${port}`);
   } catch (err) {
     throw err;
-    getNewInstanceOfLogger(metadata).emerg(err);
   }
 });

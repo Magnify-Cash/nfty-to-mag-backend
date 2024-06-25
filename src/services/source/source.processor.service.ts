@@ -11,12 +11,12 @@ import DestinationBridgeService from "../destination/destination.bridge.service"
 import Erc20Contract from "../../contracts/erc20.contract";
 import coingeckoService from "../coingecko.service";
 
-const WHERE = "ProcessorService";
+const WHERE = "SourceProcessorService";
 
 export default class SourceProcessorService {
   queues = {
-    write: new TaskQueue("Write"), // that calls both or any of contracts (send calls both contracts)
-    read: new TaskQueue("Read"), // that doesn't write contracts or doesn't interact with it at all
+    write: new TaskQueue("SourceWrite"), // that calls both or any of contracts (send calls both contracts)
+    read: new TaskQueue("SourceRead"), // that doesn't write contracts or doesn't interact with it at all
   };
   bridgeService: SourceBridgeService;
   destBridgeService: DestinationBridgeService;
@@ -67,31 +67,9 @@ export default class SourceProcessorService {
       })
       .catch((e) => {
         handleEmergency(WHERE, "wrapSendInQueue", arguments, e);
+        throw e;
       });
   }
-
-  // wrapWithdrawInQueue(
-  //   queue: TaskQueue,
-  //   fromChain: string,
-  //   eventChain: string,
-  //   blockNumber: number,
-  //   transactionHash: string,
-  //   nonce: string,
-  // ) {
-  //   return queue
-  //     .enqueue(() => {
-  //       return this.processWithdrawEvent(
-  //         fromChain,
-  //         eventChain,
-  //         blockNumber,
-  //         transactionHash,
-  //         nonce,
-  //       );
-  //     })
-  //     .catch((e) => {
-  //       handleEmergency(WHERE, "wrapWithdrawInQueue", arguments, e);
-  //     });
-  // }
 
   wrapRefundInQueue(nonce: string) {
     return this.queues.read
@@ -113,34 +91,15 @@ export default class SourceProcessorService {
       });
   }
 
-  // wrapRemoveTokenInQueue(queue: TaskQueue, fromChain: string, token: string) {
-  //   return queue
-  //     .enqueue(() => {
-  //       return this.processRemoveTokenEvent(fromChain, token);
-  //     })
-  //     .catch((e) => {
-  //       handleEmergency(WHERE, "wrapRemoveTokenInQueue", arguments, e);
-  //     });
-  // }
-
-  // wrapNewWrappedNativeInQueue(
-  //   queue: TaskQueue,
-  //   fromChain: string,
-  //   oldWrappedNative: string,
-  //   newWrappedNative: string,
-  // ) {
-  //   return queue
-  //     .enqueue(() => {
-  //       return this.processNewWrappedNativeEvent(
-  //         fromChain,
-  //         oldWrappedNative,
-  //         newWrappedNative,
-  //       );
-  //     })
-  //     .catch((e) => {
-  //       handleEmergency(WHERE, "wrapNewWrappedNativeInQueue", arguments, e);
-  //     });
-  // }
+  async wrapRemoveTokenInQueue(token: string) {
+    try {
+      return await this.queues.read.enqueue(() => {
+        return this.processRemoveTokenEvent(token);
+      });
+    } catch (e) {
+      handleEmergency(WHERE, "wrapRemoveTokenInQueue", arguments, e);
+    }
+  }
 
   async processSendEvent(
     eventChain: string,
@@ -161,14 +120,27 @@ export default class SourceProcessorService {
         "processSendEvent",
         arguments,
       );
-      const nonce = nonceWithPrefix.split("POLYGON")[1];
-      const order = await mongoService.getOrder(nonceWithPrefix);
+      const nonce = nonceWithPrefix.split("-")[1];
+
+      let isNonceBlocked =
+        await this.bridgeService.contract.isNonceBlockedForRefund(nonce);
+
+      const isNonceRefunded =
+        await this.bridgeService.contract.isNonceRefunded(nonce);
+
+      let order = await mongoService.getOrder(nonceWithPrefix);
 
       let status;
       if (!order) {
+        status = Status.Sent.toString();
         const tx = await this.bridgeService.getTx(transactionHash);
         const fromUser = tx ? tx.from : "TxLost";
-        await mongoService.addOrder({
+
+        if (isNonceBlocked) status = Status.Blocked.toString();
+
+        if (isNonceRefunded) status = Status.Refunded.toString();
+
+        order = await mongoService.addOrder({
           fromChain: eventChain,
           toChain,
           nonce: nonceWithPrefix,
@@ -179,67 +151,32 @@ export default class SourceProcessorService {
           amount,
           sendTxHash: transactionHash,
           createdOnBlock: blockNumber,
+          status,
         });
-        status = Status.Sent.toString();
-      } else {
-        status = order.status;
+      }
+      if (order.status == Status.Sent.toString()) {
+        await this.bridgeService.blockOrder(nonce, nonceWithPrefix);
+        isNonceBlocked = true;
       }
 
-      if (status !== Status.Sent.toString()) {
-        handleInfo(WHERE, "skipped by status", "processSendEvent", arguments);
-        return;
-      }
-
-      const isOrderBlocked = await this.bridgeService.blockOrder(
-        nonceWithPrefix.split("POLYGON")[1],
-      );
-      if (isOrderBlocked) {
+      if (isNonceBlocked && !isNonceRefunded) {
         const isOrderWithdrawn = await this.destBridgeService.withdrawOrder(
           tokenOnSecondChain,
           to,
           amountToSend,
           nonceWithPrefix,
         );
+
         if (isOrderWithdrawn) {
-          handleInfo(WHERE, "send event processed => withdrawn");
+          handleInfo(WHERE, `send event processed => withdrawn(nonce:${nonce}`);
           return;
         }
       }
-
-      const isRefunded = await this.bridgeService.refundOrder(nonce);
-
-      if (!isRefunded) {
-        handleError(WHERE, "processSendEvent", arguments, "order stuck!");
-      }
     } catch (e) {
       handleEmergency(WHERE, "processSendEvent", arguments, e);
+      throw e;
     }
   }
-
-  // async processWithdrawEvent(
-  //   fromChain: string,
-  //   eventChain: string,
-  //   blockNumber: number,
-  //   transactionHash: string,
-  //   nonce: string,
-  // ) {
-  //   try {
-  //     handleInfo(
-  //       WHERE,
-  //       "started processing withdraw event",
-  //       "processWithdrawEvent",
-  //       arguments,
-  //     );
-  //     await mongoService.orderComplete(
-  //       fromChain,
-  //       nonce,
-  //       blockNumber,
-  //       transactionHash,
-  //     );
-  //   } catch (e) {
-  //     handleEmergency(WHERE, "processWithdrawEvent", arguments, e);
-  //   }
-  // }
 
   async processRefundEvent(nonce: string) {
     try {
@@ -250,21 +187,13 @@ export default class SourceProcessorService {
         arguments,
       );
 
-      const order = await mongoService.getOrder(nonce);
+      const order = await mongoService.getOrderByNonce(nonce);
       if (!order) {
         handleError(
           WHERE,
           "processRefundEvent => " + nonce,
           arguments,
           "Order Not Found",
-        );
-        return;
-      }
-      if (order.status !== Status.Sent) {
-        handleInfo(
-          WHERE,
-          "processRefundEvent => order has not a Sent status -> " +
-            order.status,
         );
         return;
       }
@@ -314,45 +243,26 @@ export default class SourceProcessorService {
     }
   }
 
-  // async processRemoveTokenEvent(fromChain: string, token: string) {
-  //   try {
-  //     handleInfo(
-  //       WHERE,
-  //       "started processing remove token event",
-  //       "processRemoveTokenEvent",
-  //       arguments,
-  //     );
-  //
-  //     await mongoService.removeChainToken(fromChain, token);
-  //
-  //     handleInfo(WHERE, "remove token event processed!");
-  //   } catch (e) {
-  //     handleEmergency(WHERE, "processRemoveTokenEvent", arguments, e);
-  //   }
-  // }
+  async processRemoveTokenEvent(token: string) {
+    try {
+      handleInfo(
+        WHERE,
+        "started processing remove token event",
+        "processRemoveTokenEvent",
+        arguments,
+      );
 
-  // async processNewWrappedNativeEvent(
-  //   fromChain: string,
-  //   oldWrappedNative: string,
-  //   newWrappedNative: string,
-  // ) {
-  //   try {
-  //     handleInfo(
-  //       WHERE,
-  //       "started processing new wrapped native event",
-  //       "processNewWrappedNativeEvent",
-  //       arguments,
-  //     );
-  //
-  //     await mongoService.changeTokenAddress(
-  //       fromChain,
-  //       oldWrappedNative,
-  //       newWrappedNative,
-  //     );
-  //
-  //     handleInfo(WHERE, "new wrapped native event processed!");
-  //   } catch (e) {
-  //     handleEmergency(WHERE, "processNewWrappedNativeEvent", arguments, e);
-  //   }
-  // }
+      const erc20 = new Erc20Contract(
+        token,
+        this.bridgeService.contract.wallet,
+      );
+      const symbol = await erc20.symbol();
+
+      await mongoService.removeChainToken(symbol);
+
+      handleInfo(WHERE, "remove token event processed!");
+    } catch (e) {
+      handleEmergency(WHERE, "processRemoveTokenEvent", arguments, e);
+    }
+  }
 }

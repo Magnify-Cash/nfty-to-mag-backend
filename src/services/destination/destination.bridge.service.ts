@@ -1,6 +1,7 @@
-import { handleError } from "../../utils/logs.handler";
+import { handleError, handleInfo } from "../../utils/logs.handler";
 import DestinationBridgeContract from "../../contracts/destination.bridge.contract";
 import { TopicFilter, Wallet } from "ethers";
+import mongoService from "../mongo.service";
 
 const WHERE = "DestinationBridgeService";
 
@@ -18,6 +19,15 @@ export default class DestinationBridgeService {
     nonce: string,
   ) {
     try {
+      const isNonceUsed = await this.contract.isNonceUsed(nonce);
+      if (isNonceUsed) {
+        handleInfo(
+          WHERE,
+          `withdrawOrder: order already withdrawn or nonceConflict ${nonce}`,
+        );
+        return true;
+      }
+
       const tx = await this.contract.withdraw(
         tokenOnSecondChain,
         to,
@@ -25,7 +35,11 @@ export default class DestinationBridgeService {
         nonce,
       );
 
-      console.log(`withdraw to destination chain Transaction Receipt`, tx);
+      await mongoService.orderComplete(nonce, tx.blockNumber, tx.hash);
+      handleInfo(
+        WHERE,
+        `withdrawOrder: order completed ${nonce}  tx: ${tx.hash}`,
+      );
 
       return true;
     } catch (e) {

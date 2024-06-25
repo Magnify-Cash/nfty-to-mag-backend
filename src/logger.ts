@@ -31,9 +31,9 @@ export function getNewInstanceOfLogger(
     ),
     format: format.combine(
       format.timestamp(),
-      format.splat(),
       format.json(),
-      format.colorize(),
+      format.align(),
+      format.errors(),
     ),
   });
 }
@@ -42,13 +42,6 @@ export function instantiateLogger(metadata: Record<string, any> = {}) {
   loggerInstance = getNewInstanceOfLogger(metadata);
 }
 
-export function logger(metadata: Record<string, any> = {}): Logger {
+export function logger(): Logger {
   return loggerInstance;
 }
-
-// export async function flushLogs(): Promise<void> {
-//     if (!s3LogsEnabled) return;
-//     return new Promise<void>((resolve) => {
-//         s3stream.flushFile(() => resolve());
-//     });
-// }

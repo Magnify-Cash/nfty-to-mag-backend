@@ -1,4 +1,4 @@
-import { config, EventsConfig } from "../../config";
+import { config, DestinationEventsConfig } from "../../config";
 import { handleInfo } from "../../utils/logs.handler";
 import { TopicFilter } from "ethers";
 import mongoService from "../mongo.service";
@@ -34,7 +34,8 @@ function waitForPromiseWithTimeout<T>(
 export default class DestinationListenerService {
   destinationBridgeService: DestinationBridgeService;
 
-  private readonly events = config.get<EventsConfig>("events");
+  private readonly events =
+    config.get<DestinationEventsConfig>("destinationEvents");
   processor: DestinationProcessorService;
   private topicFilter: TopicFilter | undefined = undefined;
 

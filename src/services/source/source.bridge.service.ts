@@ -12,33 +12,29 @@ export default class SourceBridgeService {
     this.contract = new SourceBridgeContract(address, wallet);
   }
 
-  async blockOrder(nonceEventChain: string) {
+  async blockOrder(nonceEventChain: string, nonceWithPrefix: string) {
     try {
       const tx = await this.contract.blockRefund(nonceEventChain);
-      console.log(`blockRefund Transaction`, tx);
 
-      await mongoService.orderBlocked(nonceEventChain);
-      handleInfo(WHERE, `blockOrder result -> ${tx}`, "blockOrder");
+      await mongoService.orderBlocked(nonceWithPrefix, tx.hash);
+      handleInfo(WHERE, `blockOrder result -> ${tx.hash}`, "blockOrder");
 
       return true;
     } catch (e) {
       handleError(WHERE, "blockOrder", arguments, e);
-      return false;
+      throw e;
     }
   }
 
   async refundOrder(nonceEventChain: string) {
     try {
       const tx = await this.contract.refundNonce(nonceEventChain);
-      console.log(`refundNonce source chain Transaction Receipt`, tx);
-
       await mongoService.orderRefunded(nonceEventChain);
       handleInfo(
         WHERE,
-        `refundNonce -> ` + nonceEventChain,
+        `refundNonce -> ` + nonceEventChain + `tx: ${tx.hash}`,
         "processSendEvent",
       );
-
       return true;
     } catch (e) {
       handleError(WHERE, "refundOrder", arguments, e);
@@ -47,14 +43,17 @@ export default class SourceBridgeService {
   }
 
   async getTopicFilters(names: string[]) {
-    const filters = await Promise.all(
-      names.map(async (name) => this.contract.getTopicFilter(name)),
+    const filters: TopicFilter[] = await Promise.all(
+      names.map(async (eventName) => {
+        return this.contract.getTopicFilter(eventName);
+      }),
     );
-    const res = filters.reduce((memory, item) => {
-      memory = memory.concat(item);
-      return memory;
-    }, []);
-    return res;
+    return [
+      filters.reduce((memory, item) => {
+        memory = memory.concat(item);
+        return memory;
+      }, [] as TopicFilter),
+    ] as TopicFilter;
   }
 
   async getTx(txHash: string) {

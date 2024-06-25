@@ -7,31 +7,25 @@
   "cron": {
     "updateCoins": "0 * * * *",
     "searchEvents": "*/10 * * * * *",
-    "processQueue": "*/3 * * * * *"
+    "processQueue": "*/3 * * * * *",
+    "refundStuckOrders": "*/40 * * * * *"
   },
   "ttl": {
     "ordersLifeSec": 2592000
   },
-  "events": {
-    "send": "Send",
-    "refund": "Refund",
-    "addToken": "AddToken"
+  "destinationEvents": {
+    "withdraw": "Withdraw"
   },
   "sourceEvents": {
     "send": "Send",
     "refund": "Refund",
-    "addToken": "AddToken"
+    "addToken": "AddToken",
+    "removeToken": "RemoveToken"
   },
   "progress": {
     "block": "block"
   },
   "api": {
     "coingecko": "https://api.coingecko.com/api/v3/"
-  },
-  "tokens": {
-    "defaultIcon": {
-      "loop": "https://assets.coingecko.com/coins/images/24259/small/loop.png?1647170665",
-      "binance": "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png?1644979850"
-    }
   }
 }

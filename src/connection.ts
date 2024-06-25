@@ -9,9 +9,6 @@ export default class Connection {
   constructor(config: ChainConfig) {
     this.provider = new JsonRpcProvider(config.rpc);
     this.wallet = new Wallet(config.privateKey, this.provider);
-    this.provider
-      .getBlockNumber()
-      .then((blockNumber: number) => console.log(blockNumber));
   }
 
   async calculateNonce() {

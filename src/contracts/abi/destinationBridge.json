@@ -1,21 +1,5 @@
 [
   {
-    "inputs": [],
-    "name": "FailedToSendEther",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "minTimeToWaitBeforeRefund",
-        "type": "uint256"
-      }
-    ],
-    "name": "MinTimeToWaitBeforeRefundIsTooBig",
-    "type": "error"
-  },
-  {
     "inputs": [
       {
         "internalType": "string",
@@ -103,19 +87,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "nonce",
-        "type": "uint256"
-      }
-    ],
-    "name": "BlockRefund",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": true,
         "internalType": "address",
         "name": "token",
@@ -174,19 +145,6 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint256",
-        "name": "minTimeToWaitBeforeRefund",
-        "type": "uint256"
-      }
-    ],
-    "name": "NewMinTimeToWaitBeforeRefund",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
         "internalType": "address",
         "name": "token",
         "type": "address"
@@ -205,25 +163,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "oldWrappedNative",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "newWrappedNative",
-        "type": "address"
-      }
-    ],
-    "name": "NewWrappedNative",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": false,
         "internalType": "address",
         "name": "account",
@@ -231,37 +170,6 @@
       }
     ],
     "name": "Paused",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "nonce",
-        "type": "string"
-      }
-    ],
-    "name": "Refund",
     "type": "event"
   },
   {
@@ -350,43 +258,6 @@
       }
     ],
     "name": "RoleRevoked",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "tokenOnSecondChain",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "nonce",
-        "type": "uint256"
-      }
-    ],
-    "name": "Send",
     "type": "event"
   },
   {
@@ -536,25 +407,12 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "nonceToBlock",
-        "type": "uint256"
-      }
-    ],
-    "name": "blockRefund",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "token",
         "type": "address"
       },
       {
-        "internalType": "address",
+        "internalType": "address payable",
         "name": "to",
         "type": "address"
       },
@@ -652,28 +510,8 @@
       },
       {
         "internalType": "address",
-        "name": "_wrappedNative",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_minAmountForNative",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "_otherChainTokenForNative",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "_relayer",
         "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_minTimeToWaitBeforeRefund",
-        "type": "uint256"
       }
     ],
     "name": "initialize",
@@ -695,96 +533,6 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "minTimeToWaitBeforeRefund",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "name": "nonceInfo",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "creator",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "creationTime",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "nonceIsBlockedForRefund",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "nonceIsRefunded",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -864,19 +612,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "nonceToRefund",
-        "type": "uint256"
-      }
-    ],
-    "name": "refund",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "token",
         "type": "address"
@@ -944,48 +679,12 @@
         "type": "address"
       },
       {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "send",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
         "internalType": "uint256",
         "name": "minAmount",
         "type": "uint256"
       }
     ],
     "name": "setMinAmountForToken",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_wrappedNative",
-        "type": "address"
-      }
-    ],
-    "name": "setNewWrappedNative",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1004,19 +703,6 @@
       }
     ],
     "name": "setOtherChainToken",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_minTimeToWaitBeforeRefund",
-        "type": "uint256"
-      }
-    ],
-    "name": "setTimeToWaitBeforeRefund",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1123,19 +809,6 @@
     "name": "withdraw",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "wrappedNative",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {

@@ -1,4 +1,4 @@
-import { config, EventsConfig } from "../../config";
+import { config, SourceEventsConfig } from "../../config";
 import { handleInfo } from "../../utils/logs.handler";
 import { TopicFilter } from "ethers";
 import mongoService from "../mongo.service";
@@ -7,7 +7,7 @@ import SourceBridgeService from "./source.bridge.service";
 import SourceProcessorService from "./source.processor.service";
 import DestinationBridgeService from "../destination/destination.bridge.service";
 
-const WHERE = "ListenerService";
+const WHERE = "SourceListenerService";
 
 function waitForPromiseWithTimeout<T>(
   promise: Promise<T>,
@@ -36,7 +36,7 @@ export default class SourceListenerService {
   bridgeService;
   processor;
 
-  private readonly events = config.get<EventsConfig>("events");
+  private readonly events = config.get<SourceEventsConfig>("sourceEvents");
   private topicFilter: TopicFilter | undefined = undefined;
 
   constructor(
@@ -71,8 +71,6 @@ export default class SourceListenerService {
     this.topicFilter = await this.bridgeService.getTopicFilters(
       Object.values(this.events),
     );
-
-    console.log(this.topicFilter, 123);
     return this.topicFilter;
   }
 
@@ -87,25 +85,19 @@ export default class SourceListenerService {
         range.to,
       );
 
-      const res = await logsPromise;
-      console.log(res, 999999);
-
       const logs = await waitForPromiseWithTimeout(
         logsPromise,
         20,
         `call of contract.queryFilter`,
       );
-
       logs.forEach((log) => {
-        console.log(log, "LOG");
         const event =
           this.bridgeService.contract.baseContract.interface.parseLog({
             topics: log.topics.slice(),
             data: log.data,
           });
-        console.log(event, 123);
         if (!event) {
-          return; // continue;
+          return;
         }
 
         switch (event.name) {
@@ -120,50 +112,28 @@ export default class SourceListenerService {
               event.args.to,
               event.args.amount,
               event.args.nonce,
-              event.args.amountToSend,
+              event.args.amountToReceive,
             );
             break;
           }
-          // case this.events.withdraw: {
-          //   processorService.wrapWithdrawInQueue(
-          //     processorService.queues.read,
-          //     otherChain,
-          //     contract.chain,
-          //     log.blockNumber,
-          //     log.transactionHash,
-          //     event.args.nonce,
-          //   );
-          //   break;
-          // }
+
           case this.events.refund: {
             this.processor.wrapRefundInQueue(event.args.nonce);
             break;
           }
+
           case this.events.addToken: {
-            console.log(event);
             this.processor.wrapAddTokenInQueue(
               event.args.token,
               event.args.tokenOnSecondChain,
             );
             break;
           }
-          // case this.events.removeToken: {
-          //   processorService.wrapRemoveTokenInQueue(
-          //     processorService.queues.read,
-          //     contract.chain,
-          //     event.args.token,
-          //   );
-          //   break;
-          // }
-          // case this.events.newWrappedNative: {
-          //   processorService.wrapNewWrappedNativeInQueue(
-          //     processorService.queues.read,
-          //     contract.chain,
-          //     event.args.oldWrappedNative,
-          //     event.args.newWrappedNative,
-          //   );
-          //   break;
-          // }
+
+          case this.events.removeToken: {
+            this.processor.wrapRemoveTokenInQueue(event.args.token);
+            break;
+          }
 
           default:
             // Just skip other events

@@ -1,2 +1,0 @@
-export const LOOP_SECONDS_PER_BLOCK = 1;
-export const BINANCE_SECONDS_PER_BLOCK = 3;

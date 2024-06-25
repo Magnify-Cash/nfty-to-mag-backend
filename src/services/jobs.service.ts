@@ -25,29 +25,20 @@ class JobsService {
   private readonly sourceListener;
   private readonly destinationListener;
 
-  // TODO: refactor
-  private readonly oppositeChain: { [x: string]: string } = {
-    loop: "binance",
-    binance: "loop",
-  };
-
   private isSourceEventsParsing = false;
   private isDestinationEventsParsing = false;
-  private isSearchingEvents = false;
 
   constructor() {
-    console.log(this.chainsConfig.source);
     this.sourceConncetion = new Connection(this.chainsConfig.source);
-    console.log(this.sourceConncetion);
     this.destinationConnection = new Connection(this.chainsConfig.destination);
 
     this.destinationBridgeService = new DestinationBridgeService(
       this.chainsConfig.destination.bridgeContractAddress,
-      this.sourceConncetion.getWallet(),
+      this.destinationConnection.getWallet(),
     );
     this.sourceBridgeService = new SourceBridgeService(
       this.chainsConfig.source.bridgeContractAddress,
-      this.destinationConnection.getWallet(),
+      this.sourceConncetion.getWallet(),
     );
 
     this.sourceListener = new SourceListenerService(
@@ -61,14 +52,13 @@ class JobsService {
   }
 
   async start() {
-    cron.schedule(this.cronConfig.updateCoins, async () => {
-      await coingeckoService.updateCoins();
+    cron.schedule(this.cronConfig.updateCoins, () => {
+      coingeckoService.updateCoins();
     });
 
-    const sourceBlockExpired =
-      await this.sourceBridgeService.contract.getBlockExpiredWithdraw();
-    console.log(sourceBlockExpired);
-    await this.refundBlockedOrders(sourceBlockExpired);
+    cron.schedule(this.cronConfig.refundStuckOrders, () => {
+      this.refundBlockedOrders();
+    });
 
     cron.schedule(this.cronConfig.searchEvents, () => {
       this.parseSourceEvents();
@@ -77,22 +67,26 @@ class JobsService {
 
     cron.schedule(this.cronConfig.processQueue, async () => {
       await this.sourceListener.processor.processQueues();
-      // await this.destinationListener.processor.processQueues();
+      await this.destinationListener.processor.processQueues();
     });
 
     logger().info("Jobs started!");
   }
 
-  ///////////////////////////// EVENTS
+  // EVENTS
 
   async parseSourceEvents() {
-    const delayBlock = 5;
+    const delayBlock = 0;
 
     if (!this.isSourceEventsParsing) {
       this.isSourceEventsParsing = true;
-      handleInfo(WHERE, "started!", "searchEvents");
+      handleInfo(WHERE, "SourceEventsParsing started!", "searchEvents");
     } else {
-      handleInfo(WHERE, `skip already in search`, "searchEvents");
+      handleInfo(
+        WHERE,
+        `SourceEventsParsing skip already in search`,
+        "searchEvents",
+      );
       return;
     }
     try {
@@ -105,113 +99,70 @@ class JobsService {
         : this.chainsConfig.source.bridgeContractCreationBlock;
       await this.sourceListener.searchEvents(fromBlock, toBlock);
 
-      handleInfo(WHERE, `chain:source done!`, "searchEvents");
+      handleInfo(
+        WHERE,
+        `SourceEventsParsing chain:source done!`,
+        "searchEvents",
+      );
     } catch (e) {
-      handleError(WHERE, `chain:source searchEvents`, {}, e);
+      handleError(
+        WHERE,
+        `SourceEventsParsing chain:source searchEvents`,
+        {},
+        e,
+      );
       throw e;
     }
     this.isSourceEventsParsing = false;
   }
 
   async parseDestinationEvents() {
-    const delayBlock = 5;
+    const delayBlock = 0;
 
     if (!this.isDestinationEventsParsing) {
       this.isDestinationEventsParsing = true;
-      handleInfo(WHERE, "started!", "searchEvents");
+      handleInfo(WHERE, "DestinationEvents started!", "searchEvents");
     } else {
-      handleInfo(WHERE, `skip already in search`, "searchEvents");
+      handleInfo(
+        WHERE,
+        `DestinationEvents skip already in search`,
+        "searchEvents",
+      );
       return;
     }
     try {
-      const toBlock = await this.sourceConncetion.getBlockNumber();
+      const toBlock = await this.destinationConnection.getBlockNumber();
       const progress = await mongoService.getBlockProgress();
-      const progressChain = progress.source;
+      const progressChain = progress.destination;
 
       const fromBlock = progressChain
         ? progressChain - delayBlock
-        : this.chainsConfig.source.bridgeContractCreationBlock;
+        : this.chainsConfig.destination.bridgeContractCreationBlock;
       await this.destinationListener.searchEvents(fromBlock, toBlock);
 
-      handleInfo(WHERE, `chain:destination done!`, "searchEvents");
+      handleInfo(
+        WHERE,
+        `DestinationEvents chain: destination done!`,
+        "searchEvents",
+      );
     } catch (e) {
-      handleError(WHERE, `chain:destination searchEvents`, {}, e);
+      handleError(
+        WHERE,
+        `DestinationEvents chain: destination searchEvents`,
+        {},
+        e,
+      );
     }
     this.isDestinationEventsParsing = false;
   }
 
-  // async searchEvents() {
-  //   const delayBlock = 5;
+  //ORDERS
 
-  //   if (!this.isSearchingEvents) {
-  //     this.isSearchingEvents = true;
-  //     handleInfo(WHERE, "started!", "searchEvents");
-  //   } else {
-  //     handleInfo(WHERE, "skip - already in search", "searchEvents");
-  //     return;
-  //   }
-  //   try {
-  //     const [toBlockLoop, toBlockBinance, progress] = await Promise.all([
-  //       connection.getBlockNumber(bridgeService.bridges.loop.chain),
-  //       connection.getBlockNumber(bridgeService.bridges.binance.chain),
-  //       mongoService.getBlockProgress(),
-  //     ]);
-
-  //     let fromBlockLoop = 0;
-  //     if (progress.loop) {
-  //       fromBlockLoop = progress.loop - delayBlock;
-  //     } else {
-  //       handleError(
-  //         WHERE,
-  //         "searchEvents",
-  //         {},
-  //         "loop block progress not found! Taking contract creation block",
-  //       );
-  //       fromBlockLoop =
-  //         config.get<ChainsConfig>("chains").loop.bridgeContractCreationBlock;
-  //     }
-
-  //     let fromBlockBinance = 0;
-  //     if (progress.binance) {
-  //       fromBlockBinance = progress.binance - delayBlock;
-  //     } else {
-  //       handleError(
-  //         WHERE,
-  //         "searchEvents",
-  //         {},
-  //         "binance block progress not found! Taking contract creation block",
-  //       );
-  //       fromBlockBinance =
-  //         config.get<ChainsConfig>("chains").binance
-  //           .bridgeContractCreationBlock;
-  //     }
-
-  //     await Promise.all([
-  //       listenerService.searchEvents(
-  //         bridgeService.bridges.loop,
-  //         bridgeService.bridges.binance.chain,
-  //         fromBlockLoop,
-  //         toBlockLoop,
-  //       ),
-  //       listenerService.searchEvents(
-  //         bridgeService.bridges.binance,
-  //         bridgeService.bridges.loop.chain,
-  //         fromBlockBinance,
-  //         toBlockBinance,
-  //       ),
-  //     ]);
-  //     handleInfo(WHERE, "done!", "searchEvents");
-  //   } catch (e) {
-  //     handleError(WHERE, "searchEvents", {}, e);
-  //   }
-  //   this.isSearchingEvents = false;
-  // }
-
-  //////////////////////////// ORDERS
-
-  async refundBlockedOrders(toBlock: number) {
+  async refundBlockedOrders() {
     try {
       handleInfo(WHERE, "refundBlockedOrders started!");
+      const toBlock =
+        await this.sourceBridgeService.contract.getBlockExpiredWithdraw();
       const orders = await mongoService.getBlockedOrders();
 
       const oldOrders = orders.filter((o) => o.createdOnBlock < toBlock);

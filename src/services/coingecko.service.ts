@@ -49,9 +49,6 @@ class CoingeckoService {
   private async getCoinDetails(id: string): Promise<CoinDetails> {
     let coinDetails = {} as CoinDetails;
     try {
-      if (id.toLowerCase() === "loop") {
-        id = "loopnetwork";
-      }
       const url = `${this.getApi()}coins/${id}`; // doesn't support multiple tokens
       const response = await axios.get(url, {
         params: {

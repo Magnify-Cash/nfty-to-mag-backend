@@ -20,10 +20,10 @@ jobs:
           NODE_ENV: ${{ vars.PROD_NODE_ENV }}
           PORT: ${{ vars.PROD_PORT }}
           CORS_WHITELIST: ${{ secrets.CORS_WHITELIST }} 
-          BINANCE_PRIVATE_KEY: ${{ secrets.PROD_BINANCE_PRIVATE_KEY }}
-          LOOP_PRIVATE_KEY: ${{ secrets.PROD_LOOP_PRIVATE_KEY }}
-          BINANCE_RPC: ${{ secrets.PROD_BINANCE_RPC }}
-          LOOP_RPC: ${{ secrets.PROD_LOOP_RPC }}
+          BINANCE_PRIVATE_KEY: ${{ secrets.PROD_PRIVATE_KEY }}
+          LOOP_PRIVATE_KEY: ${{ secrets.PROD_PRIVATE_KEY }}
+          BINANCE_RPC: ${{ secrets.PROD_RPC }}
+          LOOP_RPC: ${{ secrets.PROD_RPC }}
           MONGO_URL: ${{ secrets.PROD_MONGO_URL }}
         run: |
           echo "NODE_ENV=$NODE_ENV" >> .env

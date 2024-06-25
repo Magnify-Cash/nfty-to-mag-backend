@@ -1,7 +1,7 @@
 import { handleError, handleInfo } from "../utils/logs.handler";
 import { config, ProgressConfig } from "../config";
 import { IOrder, MongoOrder, Status } from "../models/order.schema";
-import { IToken, MongoToken } from "../models/token.schema";
+import { MongoToken } from "../models/token.schema";
 import { IAddOrder, IProgress } from "./types/mongo.types";
 import { MongoProgress } from "../models/progress.scema";
 
@@ -14,12 +14,15 @@ class MongoService {
 
   async setBlockProgress(lastBlock: number, chainType: string) {
     try {
-      const findUpdateRes = await MongoProgress.findByIdAndUpdate(
+      await MongoProgress.findByIdAndUpdate(
         this.progressBlockId,
         { [chainType]: lastBlock },
         { upsert: true },
       );
-      //handleInfo(WHERE, "updated", "setBlockProgress", arguments);
+      handleInfo(WHERE, "updated", "setBlockProgress", {
+        chainType,
+        lastBlock,
+      });
     } catch (e) {
       handleError(WHERE, "setBlockProgress", arguments, e);
     }
@@ -44,29 +47,31 @@ class MongoService {
 
   //// Orders
 
-  async addOrder(addOrder: IAddOrder) {
+  async addOrder(addOrder: IAddOrder): Promise<IOrder> {
     try {
       const order = Object.assign(addOrder, {
         _id: addOrder.nonce,
         createdAt: new Date(),
         createdTimestamp: Date.now(),
-        status: Status.Sent.toString(),
-        nonce: addOrder.nonce.split("POLYGON")[1],
+        nonce: addOrder.nonce.split("-")[1],
       }) as IOrder;
-      await MongoOrder.create(order);
+      const createdOrder = await MongoOrder.create(order);
       handleInfo(WHERE, "saved order -> " + addOrder.nonce, "addOrder");
+      return createdOrder as IOrder;
     } catch (e) {
       handleError(WHERE, "addOrder", arguments, e);
+      throw e;
     }
   }
 
-  async orderBlocked(nonce: string) {
+  async orderBlocked(nonce: string, txHash: string) {
     try {
       const updatedTimestamp = Date.now();
       const status = Status.Blocked.toString();
       await MongoOrder.findByIdAndUpdate(nonce, {
         updatedTimestamp,
         status,
+        blockHash: txHash,
       });
       handleInfo(WHERE, "order blocked -> " + nonce, "orderBlocked");
     } catch (e) {
@@ -107,14 +112,17 @@ class MongoService {
     }
   }
 
-  async orderRefunded(fromChainNonce: number | string) {
+  async orderRefunded(fromChainNonce: string) {
     try {
       const updatedTimestamp = Date.now();
       const status = Status.Refunded.toString();
-      await MongoOrder.findByIdAndUpdate(fromChainNonce, {
-        updatedTimestamp,
-        status,
-      });
+      await MongoOrder.findOneAndUpdate(
+        { nonce: fromChainNonce },
+        {
+          updatedTimestamp,
+          status,
+        },
+      );
       handleInfo(WHERE, "order refunded -> " + fromChainNonce, "orderRefunded");
     } catch (e) {
       handleError(WHERE, "orderRefunded", arguments, e);
@@ -125,7 +133,7 @@ class MongoService {
     return MongoOrder.findById(fromChainNonce).lean().exec();
   }
 
-  async getOrderByNonce(fromChainNonce: number): Promise<IOrder | null> {
+  async getOrderByNonce(fromChainNonce: string): Promise<IOrder | null> {
     return MongoOrder.findOne({ nonce: fromChainNonce }).lean().exec();
   }
 
@@ -139,6 +147,20 @@ class MongoService {
       handleError(WHERE, "getBlockedErrors", {}, e);
     }
     return orders;
+  }
+
+  async getLastOrderFrom(userAddr: string) {
+    try {
+      const order = (await MongoOrder.findOne({
+        fromUser: userAddr,
+      })
+        .sort({ createdAt: -1 })
+        .lean()) as IOrder;
+      return order;
+    } catch (e) {
+      handleError(WHERE, "getOrdersFrom", arguments, e);
+      throw new Error("Getting user order failed.");
+    }
   }
 
   async getOrdersFrom(userAddr: string) {
@@ -196,122 +218,13 @@ class MongoService {
     }
   }
 
-  async getAllTokens() {
-    let tokens: IToken[] = [];
+  async removeChainToken(symbol: string) {
     try {
-      tokens = (await MongoToken.find({}).lean()) as IToken[];
+      await MongoToken.deleteOne({ _id: symbol }).exec();
     } catch (e) {
-      handleError(WHERE, "getAllTokens", {}, e);
+      handleError(WHERE, "removeChainToken", arguments, e);
     }
-    return tokens;
   }
-
-  // async removeChainToken(chain: string, address: string) {
-  //   try {
-  //     const isBinance =
-  //       chain === config.get<ChainsConfig>("chains").binance.name;
-  //
-  //     let token;
-  //     if (isBinance) {
-  //       // if binance
-  //       token = await MongoToken.findOne({
-  //         binanceAddress: address,
-  //       });
-  //     } else {
-  //       // if loop
-  //       token = await MongoToken.findOne({
-  //         loopAddress: address,
-  //       });
-  //     }
-  //
-  //     if (!token) {
-  //       handleError(
-  //         WHERE,
-  //         "removeChainToken",
-  //         arguments,
-  //         "token to remove not found!",
-  //       );
-  //       return;
-  //     }
-  //
-  //     if (isBinance) {
-  //       token.binanceAddress = "";
-  //     } else {
-  //       token.loopAddress = "";
-  //     }
-  //
-  //     if (!token.binanceAddress && !token.loopAddress) {
-  //       await token.deleteOne();
-  //       handleInfo(
-  //         WHERE,
-  //         `token removed for ${token._id}!`,
-  //         "removeChainToken",
-  //         arguments,
-  //       );
-  //     } else {
-  //       await token.save();
-  //       handleInfo(
-  //         WHERE,
-  //         `address removed for ${token._id}!`,
-  //         "removeChainToken",
-  //         arguments,
-  //       );
-  //     }
-  //   } catch (e) {
-  //     handleError(WHERE, "removeChainToken", arguments, e);
-  //   }
-  // }
-
-  // async changeTokenAddress(
-  //   chain: string,
-  //   oldAddress: string,
-  //   newAddress: string,
-  // ) {
-  //   try {
-  //     const isBinance =
-  //       chain === config.get<ChainsConfig>("chains").binance.name;
-  //
-  //     let token;
-  //     if (isBinance) {
-  //       // if binance
-  //       token = await MongoToken.findOne({
-  //         binanceAddress: oldAddress,
-  //       });
-  //     } else {
-  //       // if loop
-  //       token = await MongoToken.findOne({
-  //         loopAddress: oldAddress,
-  //       });
-  //     }
-  //
-  //     if (!token) {
-  //       handleError(
-  //         WHERE,
-  //         "changeTokenAddress",
-  //         arguments,
-  //         "token to change not found!",
-  //       );
-  //       return;
-  //     }
-  //
-  //     if (isBinance) {
-  //       token.binanceAddress = newAddress;
-  //     } else {
-  //       token.loopAddress = newAddress;
-  //     }
-  //
-  //     await token.save();
-  //
-  //     handleInfo(
-  //       WHERE,
-  //       `address was changed for ${token._id}!`,
-  //       "changeTokenAddress",
-  //       arguments,
-  //     );
-  //   } catch (e) {
-  //     handleError(WHERE, "changeTokenAddress", arguments, e);
-  //   }
-  // }
 }
 
 export default new MongoService();

@@ -1,15 +1,13 @@
 import mongoService from "../mongo.service";
 import { handleEmergency, handleInfo } from "../../utils/logs.handler";
 import TaskQueue from "../../utils/tasks.queue";
-import SourceBridgeContract from "../../contracts/source.bridge.contract";
-import DestinationBridgeContract from "../../contracts/destination.bridge.contract";
 
 const WHERE = "DestinationProcessorService";
 
 export default class DestinationProcessorService {
   queues = {
-    write: new TaskQueue("Write"), // that calls both or any of contracts (send calls both contracts)
-    read: new TaskQueue("Read"), // that doesn't write contracts or doesn't interact with it at all
+    write: new TaskQueue("DestinationWrite"), // that calls both or any of contracts (send calls both contracts)
+    read: new TaskQueue("DestinationRead"), // that doesn't write contracts or doesn't interact with it at all
   };
 
   constructor() {}
