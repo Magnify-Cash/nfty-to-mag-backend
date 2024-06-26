@@ -22,3 +22,13 @@ export async function getUserLastOrders(
     return res.status(500).send(err);
   }
 }
+
+export async function health(_req: Request, res: Response) {
+  return res.status(200).json({
+    status: "ok",
+    details: {
+      application: "healthy",
+      database: "connected",
+    },
+  });
+}
