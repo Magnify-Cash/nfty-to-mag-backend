@@ -111,7 +111,8 @@ class JobsService {
         {},
         e,
       );
-      throw e;
+      //BSC rate limit
+      //throw e;
     }
     this.isSourceEventsParsing = false;
   }
