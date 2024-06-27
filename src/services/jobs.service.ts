@@ -204,6 +204,10 @@ class JobsService {
       handleError(WHERE, "refundBlockedOrders", arguments, e);
     }
   }
+
+  public get getSourceBridgeService() {
+    return this.sourceBridgeService;
+  }
 }
 
 export default new JobsService();
