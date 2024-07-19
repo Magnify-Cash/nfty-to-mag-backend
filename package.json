@@ -27,8 +27,6 @@
     "typechain": "^8.3.2"
   },
   "dependencies": {
-    "@austonpramodh/s3-streamlogger-ts": "^0.0.2",
-    "@types/aws-lambda": "^8.10.96",
     "@types/config": "^3.3.4",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
