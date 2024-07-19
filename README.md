@@ -25,7 +25,7 @@ All RPCs, contract addresses, private keys are stored in `.env`.
 | `SOURCE_BRIDGE_ADDRESS`      | String |                 | Bridge contract address in source network             |
 | `SOURCE_CREATION_BLOCK`      | String |                 | Bridge contract deploy block in destination network   |
 | `DESTINATION_RPC`            | String |                 | RPC for destination network                           |
-| `DESTINATION_ADMIN_PK`       | String |                 | PK for Admin Account in destination network           |
+| `DESTINATION_ADMIN_PK`       | String |                 | PK for Admin Account in destination network, separate for each source-destination pair |
 | `DESTINATION_BRIDGE_ADDRESS` | String |                 | Bridge contract address in destination network        |
 | `DESTINATION_CREATION_BLOCK` | String |                 | Bridge contract creation block in destination network |
 | `MONGO_URL`                  | String |                 | Connection URL to mongodb                             | 
