@@ -132,6 +132,12 @@ export default class SourceProcessorService {
 
       let status;
       if (!order) {
+        const blockTimestamp = (
+          await this.bridgeService.contract.wallet.provider?.getBlock(
+            blockNumber,
+          )
+        )?.timestamp;
+        if (!blockTimestamp) throw new Error("Block timestamp getting failed");
         status = Status.Sent.toString();
         const tx = await this.bridgeService.getTx(transactionHash);
         const fromUser = tx ? tx.from : "TxLost";
@@ -152,6 +158,7 @@ export default class SourceProcessorService {
           sendTxHash: transactionHash,
           createdOnBlock: blockNumber,
           status,
+          blockTimestamp: blockTimestamp,
         });
       }
       if (order.status == Status.Sent.toString()) {
@@ -217,12 +224,6 @@ export default class SourceProcessorService {
       const erc20Source = new Erc20Contract(
         token,
         this.bridgeService.contract.wallet,
-      );
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const erc20Dest = new Erc20Contract(
-        tokenOnSecondChain,
-        this.destBridgeService.contract.wallet,
       );
 
       const decimalsSource = await erc20Source.decimals();

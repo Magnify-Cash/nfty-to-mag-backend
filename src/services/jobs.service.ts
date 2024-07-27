@@ -57,7 +57,7 @@ class JobsService {
     });
 
     cron.schedule(this.cronConfig.refundStuckOrders, () => {
-      this.refundBlockedOrders();
+      this.refundStuckOrders();
     });
 
     cron.schedule(this.cronConfig.searchEvents, () => {
@@ -159,15 +159,19 @@ class JobsService {
 
   //ORDERS
 
-  async refundBlockedOrders() {
+  async refundStuckOrders() {
     try {
       handleInfo(WHERE, "refundBlockedOrders started!");
-      const toBlock =
-        await this.sourceBridgeService.contract.getBlockExpiredWithdraw();
-      const orders = await mongoService.getBlockedOrders();
-
-      const oldOrders = orders.filter((o) => o.createdOnBlock < toBlock);
-      for (const order of oldOrders) {
+      const lastBlockTimestamp = (
+        await this.sourceConncetion.getBlock("latest")
+      )?.timestamp;
+      if (!lastBlockTimestamp) throw new Error("Unable to get block timestamp");
+      const minTimeToRefund =
+        await this.sourceBridgeService.contract.beforeRefundTime();
+      const orders = await mongoService.getStuckOrders(
+        lastBlockTimestamp - minTimeToRefund,
+      );
+      for (const order of orders) {
         try {
           const isNonceUsed =
             await this.destinationBridgeService.contract.isNonceUsed(order._id);
@@ -184,17 +188,10 @@ class JobsService {
             await mongoService.orderRefunded(order._id);
             continue;
           }
-
-          const isNonceBlockedForRefund =
-            await this.sourceBridgeService.contract.isNonceBlockedForRefund(
-              order.nonce,
-            );
-          if (isNonceBlockedForRefund) {
-            const isRefunded = await this.sourceBridgeService.refundOrder(
-              order.nonce,
-            );
-            handleInfo(WHERE, `[${order._id}] isRefunded -> ${isRefunded}`);
-          }
+          const isRefunded = await this.sourceBridgeService.refundOrder(
+            order.nonce,
+          );
+          handleInfo(WHERE, `[${order._id}] isRefunded -> ${isRefunded}`);
         } catch (e) {
           handleError(WHERE, "refundBlockedOrder", Object.values(order), e);
         }

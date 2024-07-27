@@ -18,19 +18,6 @@ export default class SourceBridgeContract {
       });
   }
 
-  async getBlockExpiredWithdraw() {
-    //TODO: Update seconds per block
-    const secondsPerBlock = 30;
-    const lastBlock = await this.wallet.provider?.getBlockNumber();
-    if (!lastBlock)
-      throw new Error(
-        `unable to get lastBlock(getBlockNumber) in ${SourceBridgeContract.name}`,
-      );
-    return (
-      lastBlock - Math.ceil((await this.beforeRefundTime()) / secondsPerBlock)
-    );
-  }
-
   async blockRefund(nonce: string) {
     const txResponse = await this.baseContract.blockRefund(nonce);
     return txResponse.wait();

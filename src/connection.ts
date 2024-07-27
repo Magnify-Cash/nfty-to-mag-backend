@@ -1,5 +1,5 @@
 import { ChainConfig, config } from "./config";
-import { ethers, JsonRpcProvider, Wallet } from "ethers";
+import { BlockTag, ethers, JsonRpcProvider, Wallet } from "ethers";
 import BigNumberJs from "bignumber.js";
 
 export default class Connection {
@@ -27,7 +27,7 @@ export default class Connection {
     return this.wallet;
   }
 
-  async getBlock(block?: number) {
+  async getBlock(block?: BlockTag) {
     return this.provider.getBlock(block || "latest");
   }
 

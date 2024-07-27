@@ -149,6 +149,19 @@ class MongoService {
     return orders;
   }
 
+  async getStuckOrders(lteTimestamp: number) {
+    let orders: IOrder[] = [];
+    try {
+      orders = (await MongoOrder.find({
+        status: { $in: [Status.Blocked.toString(), Status.Sent.toString()] },
+        blockTimestamp: { $lte: lteTimestamp },
+      }).lean()) as IOrder[];
+    } catch (e) {
+      handleError(WHERE, "getStuckOrdersErrors", {}, e);
+    }
+    return orders;
+  }
+
   async getLastOrderFrom(userAddr: string) {
     try {
       const order = (await MongoOrder.findOne({

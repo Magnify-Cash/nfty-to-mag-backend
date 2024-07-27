@@ -31,6 +31,7 @@ export interface IOrder {
   refundTxHash?: string;
   withdrawTxHash?: string;
   createdOnBlock: number;
+  blockTimestamp: number;
   updatedOnBlock?: number;
   createdTimestamp: number;
   updatedTimestamp?: number;
@@ -58,6 +59,7 @@ const orderSchema = new Schema<IOrder>({
   withdrawTxHash: { type: String, required: false },
   createdOnBlock: { type: Number, required: true },
   updatedOnBlock: { type: Number, required: false },
+  blockTimestamp: { type: Number, required: false },
   createdTimestamp: { type: Number, required: true },
   updatedTimestamp: { type: Number, required: false },
 });
