@@ -56,19 +56,18 @@ class JobsService {
       coingeckoService.updateCoins();
     });
 
-    cron.schedule(this.cronConfig.refundStuckOrders, () => {
-      this.refundStuckOrders();
-    });
-
     cron.schedule(this.cronConfig.searchEvents, () => {
       this.parseSourceEvents();
       this.parseDestinationEvents();
     });
 
-    cron.schedule(this.cronConfig.processQueue, async () => {
-      await this.sourceListener.processor.processQueues();
-      await this.destinationListener.processor.processQueues();
-    });
+    // cron.schedule(this.cronConfig.processQueue, () => {
+    //   this.sourceListener.processor.processQueues();
+    //   this.destinationListener.processor.processQueues();
+    // });
+    // cron.schedule(this.cronConfig.refundStuckOrders, () => {
+    //   this.refundStuckOrders();
+    // });
 
     logger().info("Jobs started!");
   }

@@ -65,68 +65,62 @@ class MongoService {
   }
 
   async orderBlocked(nonce: string, txHash: string) {
-    try {
-      const updatedTimestamp = Date.now();
-      const status = Status.Blocked.toString();
-      await MongoOrder.findByIdAndUpdate(nonce, {
-        updatedTimestamp,
-        status,
-        blockHash: txHash,
-      });
-      handleInfo(WHERE, "order blocked -> " + nonce, "orderBlocked");
-    } catch (e) {
-      handleError(WHERE, "orderBlocked", arguments, e);
-    }
+    const updatedTimestamp = Date.now();
+    const status = Status.Blocked.toString();
+    await MongoOrder.findByIdAndUpdate(nonce, {
+      updatedTimestamp,
+      status,
+      blockHash: txHash,
+    });
+    handleInfo(WHERE, "order blocked -> " + nonce, "orderBlocked");
   }
 
   async orderComplete(
-    fromChainNonce: number | string,
-    withdrawBlock: number,
+    fromChainNonce: string,
     withdrawTxHash: string,
+    noncePrefix: string,
   ) {
-    try {
-      const updatedTimestamp = Date.now();
-      const status = Status.Complete.toString();
-      await MongoOrder.findByIdAndUpdate(fromChainNonce, {
-        withdrawBlock,
-        withdrawTxHash,
-        updatedTimestamp,
-        status,
-      });
-      handleInfo(WHERE, "order complete -> " + fromChainNonce, "orderComplete");
-    } catch (e) {
-      handleError(WHERE, "orderComplete", arguments, e);
+    if (!fromChainNonce.includes(noncePrefix)) {
+      handleInfo(
+        WHERE,
+        "Wrong chain to update withdraw, skip",
+        "orderComplete",
+      );
+      return;
     }
+    const updatedTimestamp = Date.now();
+    const status = Status.Complete.toString();
+    const order = await MongoOrder.findById(fromChainNonce);
+    if (!order)
+      throw new Error(`Order ${fromChainNonce} not found, skip for now`);
+    await MongoOrder.findByIdAndUpdate(fromChainNonce, {
+      withdrawTxHash,
+      updatedTimestamp,
+      status,
+    });
+    handleInfo(WHERE, "order complete -> " + fromChainNonce, "orderComplete");
   }
 
   async orderUsed(fromChainNonce: number | string) {
-    try {
-      const status = Status.Complete.toString();
-      await MongoOrder.findByIdAndUpdate(fromChainNonce, {
-        status,
-        updatedTimestamp: Date.now(),
-      });
-      handleInfo(WHERE, "order complete -> " + fromChainNonce, "orderUsed");
-    } catch (e) {
-      handleError(WHERE, "orderUsed", arguments, e);
-    }
+    const status = Status.Complete.toString();
+    await MongoOrder.findByIdAndUpdate(fromChainNonce, {
+      status,
+      updatedTimestamp: Date.now(),
+    });
+    handleInfo(WHERE, "order complete -> " + fromChainNonce, "orderUsed");
   }
 
   async orderRefunded(fromChainNonce: string) {
-    try {
-      const updatedTimestamp = Date.now();
-      const status = Status.Refunded.toString();
-      await MongoOrder.findOneAndUpdate(
-        { nonce: fromChainNonce },
-        {
-          updatedTimestamp,
-          status,
-        },
-      );
-      handleInfo(WHERE, "order refunded -> " + fromChainNonce, "orderRefunded");
-    } catch (e) {
-      handleError(WHERE, "orderRefunded", arguments, e);
-    }
+    const updatedTimestamp = Date.now();
+    const status = Status.Refunded.toString();
+    await MongoOrder.findOneAndUpdate(
+      { nonce: fromChainNonce },
+      {
+        updatedTimestamp,
+        status,
+      },
+    );
+    handleInfo(WHERE, "order refunded -> " + fromChainNonce, "orderRefunded");
   }
 
   async getOrder(fromChainNonce: number | string): Promise<IOrder | null> {

@@ -7,8 +7,7 @@ The backend works as event parser and transaction sender. Implements next genera
 Updates transaction status to `BLOCKED`
 - After `blocking` executes withdraw process in `destination` network.
 - When withdrawal is finished mark the transaction as `COMPLETED` status.
-- Stuck bridging transaction will refund automatically by back-end, or can be refund manually by calling bridge contract.
-In that case transaction status will be changed to `REFUNDED`.
+- Stuck transaction will can be refunded by admin or user itself. In that case transaction status will be changed to `REFUNDED`.
 
 In order to operate with networks and send transactions, back-end requires RPC for `source` and `destination` networks.
 Each bridge instance also requires accounts in each network (private keys in .env). We call this accounts Admin.
@@ -16,19 +15,20 @@ Each Admin account must have Relayer role on bridge contracts (`RELAYER_ROLE`).
 All RPCs, contract addresses, private keys are stored in `.env`.
 
 ## Environment Variables
-| Environment Variable         | Type   | Default Value   | Description                                           |
-|------------------------------|--------|-----------------|-------------------------------------------------------|
-| `PORT`                       | number | 3000            |                                                       |
-| `CORS_WHITELIST`             | String | No origin added | Whitelisted origins separated by `,`                  |
-| `SOURCE_RPC`                 | String |                 | RPC for source network                                |
-| `SOURCE_ADMIN_PK`            | String |                 | PK for Admin Account in source network                |
-| `SOURCE_BRIDGE_ADDRESS`      | String |                 | Bridge contract address in source network             |
-| `SOURCE_CREATION_BLOCK`      | String |                 | Bridge contract deploy block in destination network   |
-| `DESTINATION_RPC`            | String |                 | RPC for destination network                           |
-| `DESTINATION_ADMIN_PK`       | String |                 | PK for Admin Account in destination network           |
-| `DESTINATION_BRIDGE_ADDRESS` | String |                 | Bridge contract address in destination network        |
-| `DESTINATION_CREATION_BLOCK` | String |                 | Bridge contract creation block in destination network |
-| `MONGO_URL`                  | String |                 | Connection URL to mongodb                             | 
+| Environment Variable         | Type   | Default Value   | Description                                                                                                                             |
+|------------------------------|--------|-----------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| `PORT`                       | number | 3000            |                                                                                                                                         |
+| `CORS_WHITELIST`             | String | No origin added | Whitelisted origins separated by `,`                                                                                                    |
+| `SOURCE_RPC`                 | String |                 | RPC for source network                                                                                                                  |
+| `SOURCE_ADMIN_PK`            | String |                 | PK for Admin Account in source network                                                                                                  |
+| `SOURCE_BRIDGE_ADDRESS`      | String |                 | Bridge contract address in source network                                                                                               |
+| `SOURCE_CREATION_BLOCK`      | String |                 | Bridge contract deploy block in destination network                                                                                     |
+| `DESTINATION_RPC`            | String |                 | RPC for destination network                                                                                                             |
+| `DESTINATION_ADMIN_PK`       | String |                 | PK for Admin Account in destination network                                                                                             |
+| `DESTINATION_BRIDGE_ADDRESS` | String |                 | Bridge contract address in destination network                                                                                          |
+| `DESTINATION_CREATION_BLOCK` | String |                 | Bridge contract creation block in destination network                                                                                   |
+| `MONGO_URL`                  | String |                 | Connection URL to mongodb                                                                                                               |
+| `NONCE_PREFIX`               | String |                 | Smart contracts bridge has network prefix before nonce e.g. BSC. So all nonces in BSC bridge will start with BSC e.g. BSC-0, BSC-1 etc. |
 
 > **_IMPORTANT_**: Admin accounts must have native coin balance in order to send transaction.
 

@@ -90,19 +90,19 @@ export default class SourceListenerService {
         20,
         `call of contract.queryFilter`,
       );
-      logs.forEach((log) => {
+      for (const log of logs) {
         const event =
           this.bridgeService.contract.baseContract.interface.parseLog({
             topics: log.topics.slice(),
             data: log.data,
           });
         if (!event) {
-          return;
+          continue;
         }
 
         switch (event.name) {
           case this.events.send: {
-            this.processor.wrapSendInQueue(
+            await this.processor.processSendEvent(
               "source",
               "destination",
               log.blockNumber,
@@ -118,12 +118,12 @@ export default class SourceListenerService {
           }
 
           case this.events.refund: {
-            this.processor.wrapRefundInQueue(event.args.nonce);
+            await this.processor.processRefundEvent(event.args.nonce);
             break;
           }
 
           case this.events.addToken: {
-            this.processor.wrapAddTokenInQueue(
+            await this.processor.processAddTokenEvent(
               event.args.token,
               event.args.tokenOnSecondChain,
             );
@@ -131,7 +131,7 @@ export default class SourceListenerService {
           }
 
           case this.events.removeToken: {
-            this.processor.wrapRemoveTokenInQueue(event.args.token);
+            await this.processor.processRemoveTokenEvent(event.args.token);
             break;
           }
 
@@ -139,7 +139,7 @@ export default class SourceListenerService {
             // Just skip other events
             break;
         }
-      });
+      }
       await mongoService.setBlockProgress(range.to - 1, "source");
     }
     handleInfo(WHERE, "ended!", "searchEvents", arguments);
