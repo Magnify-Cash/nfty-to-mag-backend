@@ -89,7 +89,7 @@ export default class DestinationListenerService {
         ` call of contract.queryFilter`,
       );
 
-      logs.forEach((log) => {
+      for (const log of logs) {
         const event =
           this.destinationBridgeService.contract.baseContract.interface.parseLog(
             {
@@ -98,14 +98,14 @@ export default class DestinationListenerService {
             },
           );
         if (!event) {
-          return; // continue;
+          continue;
         }
-        this.processor.wrapWithdrawInQueue(
+        await this.processor.processWithdrawEvent(
           log.blockNumber,
           log.transactionHash,
           event.args.nonce,
         );
-      });
+      }
       await mongoService.setBlockProgress(range.to - 1, "destination");
     }
     handleInfo(WHERE, "ended!", "searchEvents", arguments);

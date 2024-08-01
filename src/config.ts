@@ -47,6 +47,7 @@ export type Config = {
   metadata: Record<string, any>;
   env: string;
   port: number;
+  noncePrefix: string;
   corsWhitelist: string[];
   decimalPlaces: number; // default
   blocksStep: number;
@@ -82,6 +83,7 @@ class ConfigurationClass {
     return {
       env: process.env.NODE_ENV || "development",
       port: parseInt(process.env.PORT || "3000", 10),
+      noncePrefix: process.env.NONCE_PREFIX,
       corsWhitelist: process.env.CORS_WHITELIST
         ? process.env.CORS_WHITELIST.split(",")
         : [],

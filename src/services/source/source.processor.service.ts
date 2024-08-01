@@ -26,7 +26,6 @@ export default class SourceProcessorService {
     destService: DestinationBridgeService,
   ) {
     this.bridgeService = service;
-
     this.destBridgeService = destService;
   }
 
@@ -196,19 +195,14 @@ export default class SourceProcessorService {
 
       const order = await mongoService.getOrderByNonce(nonce);
       if (!order) {
-        handleError(
-          WHERE,
-          "processRefundEvent => " + nonce,
-          arguments,
-          "Order Not Found",
-        );
-        return;
+        throw new Error("Process refund: Order not found");
       }
       await mongoService.orderRefunded(nonce);
 
       handleInfo(WHERE, "refund event processed!");
     } catch (e) {
       handleEmergency(WHERE, "processRefundEvent", arguments, e);
+      throw e;
     }
   }
 

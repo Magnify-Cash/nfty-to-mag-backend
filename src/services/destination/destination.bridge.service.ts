@@ -2,11 +2,13 @@ import { handleError, handleInfo } from "../../utils/logs.handler";
 import DestinationBridgeContract from "../../contracts/destination.bridge.contract";
 import { TopicFilter, Wallet } from "ethers";
 import mongoService from "../mongo.service";
+import { config } from "../../config";
 
 const WHERE = "DestinationBridgeService";
 
 export default class DestinationBridgeService {
   readonly contract: DestinationBridgeContract;
+  noncePrefix = config.get<string>("noncePrefix");
 
   constructor(address: string, wallet: Wallet) {
     this.contract = new DestinationBridgeContract(address, wallet);
@@ -35,7 +37,7 @@ export default class DestinationBridgeService {
         nonce,
       );
 
-      await mongoService.orderComplete(nonce, tx.blockNumber, tx.hash);
+      await mongoService.orderComplete(nonce, tx.hash, this.noncePrefix);
       handleInfo(
         WHERE,
         `withdrawOrder: order completed ${nonce}  tx: ${tx.hash}`,

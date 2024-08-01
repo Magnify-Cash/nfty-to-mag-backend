@@ -26,12 +26,12 @@ class TaskQueue {
 
       try {
         await task();
+        this.tasks.shift();
       } catch (e) {
         handleEmergency(this.name, "processQueue", {}, e);
         throw e;
       } finally {
-        this.tasks.shift();
-        handleInfo(this.name, "Task done.");
+        handleInfo(this.name, "Process queue finished.");
       }
     }
     this.isRunning = false;

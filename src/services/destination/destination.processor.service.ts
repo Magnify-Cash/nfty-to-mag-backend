@@ -1,6 +1,7 @@
 import mongoService from "../mongo.service";
 import { handleEmergency, handleInfo } from "../../utils/logs.handler";
 import TaskQueue from "../../utils/tasks.queue";
+import { config } from "../../config";
 
 const WHERE = "DestinationProcessorService";
 
@@ -9,6 +10,8 @@ export default class DestinationProcessorService {
     write: new TaskQueue("DestinationWrite"), // that calls both or any of contracts (send calls both contracts)
     read: new TaskQueue("DestinationRead"), // that doesn't write contracts or doesn't interact with it at all
   };
+
+  noncePrefix = config.get<string>("noncePrefix");
 
   constructor() {}
 
@@ -39,16 +42,12 @@ export default class DestinationProcessorService {
     transactionHash: string,
     nonce: string,
   ) {
-    try {
-      handleInfo(
-        WHERE,
-        "started processing withdraw event",
-        "processWithdrawEvent",
-        arguments,
-      );
-      await mongoService.orderComplete(nonce, blockNumber, transactionHash);
-    } catch (e) {
-      handleEmergency(WHERE, "processWithdrawEvent", arguments, e);
-    }
+    handleInfo(
+      WHERE,
+      "started processing withdraw event",
+      "processWithdrawEvent",
+      arguments,
+    );
+    await mongoService.orderComplete(nonce, transactionHash, this.noncePrefix);
   }
 }
