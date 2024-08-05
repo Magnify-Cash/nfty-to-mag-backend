@@ -75,7 +75,7 @@ class JobsService {
   // EVENTS
 
   async parseSourceEvents() {
-    const delayBlock = 0;
+    const delayBlock = 1;
 
     if (!this.isSourceEventsParsing) {
       this.isSourceEventsParsing = true;
@@ -117,7 +117,7 @@ class JobsService {
   }
 
   async parseDestinationEvents() {
-    const delayBlock = 0;
+    const delayBlock = 1;
 
     if (!this.isDestinationEventsParsing) {
       this.isDestinationEventsParsing = true;
