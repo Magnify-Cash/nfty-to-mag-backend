@@ -15,6 +15,7 @@ Each Admin account must have Relayer role on bridge contracts (`RELAYER_ROLE`).
 All RPCs, contract addresses, private keys are stored in `.env`.
 
 ## Environment Variables
+
 | Environment Variable         | Type   | Default Value   | Description                                                                                                                             |
 |------------------------------|--------|-----------------|-----------------------------------------------------------------------------------------------------------------------------------------|
 | `PORT`                       | number | 3000            |                                                                                                                                         |
