@@ -1,9 +1,5 @@
 import mongoService from "../mongo.service";
-import {
-  handleEmergency,
-  handleError,
-  handleInfo,
-} from "../../utils/logs.handler";
+import { handleEmergency, handleInfo } from "../../utils/logs.handler";
 import TaskQueue from "../../utils/tasks.queue";
 import { Status } from "../../models/order.schema";
 import SourceBridgeService from "./source.bridge.service";
@@ -129,7 +125,12 @@ export default class SourceProcessorService {
 
       let order = await mongoService.getOrder(nonceWithPrefix);
 
-      let status;
+      let status = Status.Sent.toString();
+
+      if (isNonceBlocked) status = Status.Blocked.toString();
+
+      if (isNonceRefunded) status = Status.Refunded.toString();
+
       if (!order) {
         const blockTimestamp = (
           await this.bridgeService.contract.wallet.provider?.getBlock(
@@ -137,13 +138,8 @@ export default class SourceProcessorService {
           )
         )?.timestamp;
         if (!blockTimestamp) throw new Error("Block timestamp getting failed");
-        status = Status.Sent.toString();
         const tx = await this.bridgeService.getTx(transactionHash);
         const fromUser = tx ? tx.from : "TxLost";
-
-        if (isNonceBlocked) status = Status.Blocked.toString();
-
-        if (isNonceRefunded) status = Status.Refunded.toString();
 
         order = await mongoService.addOrder({
           fromChain: eventChain,
@@ -160,7 +156,8 @@ export default class SourceProcessorService {
           blockTimestamp: blockTimestamp,
         });
       }
-      if (order.status == Status.Sent.toString()) {
+
+      if (status == Status.Sent.toString()) {
         await this.bridgeService.blockOrder(nonce, nonceWithPrefix);
         isNonceBlocked = true;
       }

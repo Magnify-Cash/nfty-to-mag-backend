@@ -83,11 +83,13 @@ export default class DestinationListenerService {
           range.to,
         );
 
-      const logs = await waitForPromiseWithTimeout(
-        logsPromise,
-        20,
-        ` call of contract.queryFilter`,
-      );
+      const logs = (
+        await waitForPromiseWithTimeout(
+          logsPromise,
+          20,
+          ` call of contract.queryFilter`,
+        )
+      ).sort((a, b) => a.blockNumber - b.blockNumber);
 
       for (const log of logs) {
         const event =

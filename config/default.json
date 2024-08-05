@@ -6,7 +6,7 @@
   "gasLimitDefault": 160000,
   "cron": {
     "updateCoins": "0 * * * *",
-    "searchEvents": "*/10 * * * * *",
+    "searchEvents": "*/5 * * * * *",
     "processQueue": "*/3 * * * * *",
     "refundStuckOrders": "*/40 * * * * *"
   },
